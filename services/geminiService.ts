@@ -1,24 +1,47 @@
 
-import { GoogleGenAI, Type } from "@google/genai";
+import { GoogleGenAI } from "@google/genai";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+const getAI = () => new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 export const generateSocialStory = async (situation: string) => {
+  const ai = getAI();
   try {
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: `Crie uma "História Social" curta e simples para uma pessoa autista sobre a seguinte situação: "${situation}". 
-      A história deve ser escrita na primeira pessoa, ser positiva, direta e descrever o que esperar e como agir. 
-      Use frases curtas. Divida em no máximo 5 passos claros.`,
-      config: {
-        temperature: 0.7,
-        maxOutputTokens: 500,
-      },
+      contents: `Crie uma História Social curta e clara para uma pessoa autista sobre: "${situation}". Use frases curtas, primeira pessoa e divida em 5 passos simples com emojis.`,
     });
-
-    return response.text;
+    return response.text || "Não foi possível gerar a história agora.";
   } catch (error) {
-    console.error("Erro ao gerar história social:", error);
-    return "Desculpe, não consegui gerar a história agora. Tente algo simples como 'ir ao dentista'.";
+    console.error("Gemini Error:", error);
+    return "Desculpe, o assistente de histórias está descansando. Tente novamente em breve!";
+  }
+};
+
+export const createEducationalMaterial = async (prompt: string) => {
+  const ai = getAI();
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: `Explique de forma visual e simples sobre: "${prompt}". Use tópicos curtos, analogias simples e muitos emojis. Foco em clareza literal.`,
+      config: {
+        systemInstruction: "Você é um tutor de educação especial focado em clareza e previsibilidade.",
+      }
+    });
+    return response.text || "Material não disponível.";
+  } catch (error) {
+    return "Ocorreu um erro ao criar o material educativo.";
+  }
+};
+
+export const generateDailyIncentive = async () => {
+  const ai = getAI();
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: "Gere uma única frase de incentivo positiva e curta para uma criança autista começar o dia. Use um emoji de estrela ou troféu.",
+    });
+    return response.text || "Você é capaz de coisas incríveis hoje! 🌟";
+  } catch (error) {
+    return "Hoje é um ótimo dia para brilhar! 🌟";
   }
 };

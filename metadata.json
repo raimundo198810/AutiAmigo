@@ -1,0 +1,7 @@
+{
+  "name": "AutiAmigo",
+  "description": "Um aplicativo de suporte inclusivo para pessoas autistas, oferecendo quadros de comunicação, rotinas visuais, ferramentas de calma e um gerador de Histórias Sociais assistido por IA.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}

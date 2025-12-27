@@ -50,7 +50,6 @@ const App: React.FC = () => {
   };
 
   const renderContent = () => {
-    // Passamos a linguagem como prop para componentes que usam IA ou textos complexos
     switch (activeTab) {
       case 'board': return <CommunicationBoard />;
       case 'routine': return <VisualRoutine />;
@@ -74,21 +73,11 @@ const App: React.FC = () => {
     { id: 'routine', icon: '📅' },
     { id: 'calm', icon: '🧘' },
     { id: 'noise', icon: '👂' },
-    { id: 'stories', icon: '📖' },
-    { id: 'consultant', icon: '👩‍⚕️' },
-    { id: 'sos', icon: '🚨' },
-    { id: 'courses', icon: '🎓' },
-    { id: 'games', icon: '🎮' },
     { id: 'signs', icon: '🤟' },
-    { id: 'incentives', icon: '🏆' },
+    { id: 'stories', icon: '📖' },
+    { id: 'sos', icon: '🚨' },
+    { id: 'games', icon: '🎮' },
     { id: 'settings', icon: '⚙️' },
-  ];
-
-  const languages: {code: Language, flag: string, name: string}[] = [
-    { code: 'pt', flag: '🇧🇷', name: 'Português' },
-    { code: 'en', flag: '🇺🇸', name: 'English' },
-    { code: 'es', flag: '🇪🇸', name: 'Español' },
-    { code: 'fr', flag: '🇫🇷', name: 'Français' }
   ];
 
   if (!hasStarted) {
@@ -96,20 +85,20 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col relative overflow-x-hidden pb-20 lg:pb-0">
-      <header className="bg-white/95 backdrop-blur-md shadow-sm p-4 sticky top-0 z-50 border-b border-blue-50">
+    <div className="min-h-screen flex flex-col relative pb-24 lg:pb-0 bg-slate-200">
+      <header className="bg-white/95 backdrop-blur-md shadow-xl p-4 sticky top-0 z-50 border-b-2 border-slate-100">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <button className="flex items-center gap-2 cursor-pointer group outline-none" onClick={goToHome}>
+          <button className="flex items-center gap-2 group outline-none" onClick={goToHome}>
             <Logo size="sm" />
           </button>
           
-          <div className="hidden lg:flex items-center gap-1 overflow-x-auto no-scrollbar max-w-[50%]">
+          <div className="hidden lg:flex items-center gap-2 overflow-x-auto no-scrollbar max-w-[60%]">
             {navItems.map(item => (
               <button
                 key={item.id}
                 onClick={() => setActiveTab(item.id as AppTab)}
-                className={`px-3 py-2 rounded-xl text-[10px] font-black transition-all uppercase tracking-tighter whitespace-nowrap ${
-                  activeTab === item.id ? 'bg-blue-600 text-white shadow-lg shadow-blue-200' : 'text-slate-500 hover:bg-blue-50'
+                className={`px-4 py-2 rounded-2xl text-[10px] font-black transition-all uppercase tracking-tighter whitespace-nowrap clay-button ${
+                  activeTab === item.id ? 'bg-black text-white' : 'text-slate-500'
                 }`}
               >
                 {TRANSLATIONS[language][item.id]}
@@ -117,46 +106,32 @@ const App: React.FC = () => {
             ))}
           </div>
 
-          <div className="flex items-center gap-4">
-            {/* Language Picker */}
-            <div className="flex bg-slate-100 p-1 rounded-xl">
-              {languages.map(l => (
-                <button
-                  key={l.code}
-                  onClick={() => setLanguage(l.code)}
-                  title={l.name}
-                  className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all ${language === l.code ? 'bg-white shadow-sm scale-110' : 'opacity-40 hover:opacity-100'}`}
-                >
-                  <span className="text-sm">{l.flag}</span>
-                </button>
-              ))}
-            </div>
-            
-            <button onClick={goToHome} className="bg-slate-100 text-slate-600 p-2 rounded-xl hover:bg-slate-200 transition-colors shadow-sm" title="Home">
-              🏠
-            </button>
+          <div className="flex items-center gap-3">
+             <button onClick={goToHome} className="bg-white text-slate-600 p-3 rounded-2xl clay-button shadow-md">
+                🏠
+             </button>
           </div>
         </div>
       </header>
 
-      <main className="flex-1 max-w-6xl mx-auto w-full py-6 px-4 relative z-10">
-        <div className="bg-white rounded-[2.5rem] shadow-xl shadow-blue-900/5 min-h-[60vh] border border-blue-50 overflow-hidden">
+      <main className="flex-1 max-w-6xl mx-auto w-full py-10 px-4">
+        <div className="clay-card min-h-[70vh] overflow-hidden bg-white/80 backdrop-blur-sm border-white border-2">
           {renderContent()}
         </div>
       </main>
 
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 pb-safe shadow-[0_-5px_20px_rgba(0,0,0,0.05)] z-50 overflow-x-auto no-scrollbar">
-        <div className="flex justify-start p-2 gap-2 min-w-max px-4">
+      <nav className="lg:hidden fixed bottom-6 left-6 right-6 bg-white/95 backdrop-blur-xl border-4 border-white rounded-[3rem] shadow-2xl z-50 overflow-x-auto no-scrollbar">
+        <div className="flex justify-start p-3 gap-3 min-w-max px-6">
           {navItems.map((item) => (
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id as AppTab)}
-              className={`flex flex-col items-center p-2 rounded-2xl transition-all min-w-[65px] ${
-                activeTab === item.id ? 'bg-blue-50 text-blue-600' : 'text-slate-400'
+              className={`flex flex-col items-center p-3 rounded-[2.5rem] transition-all min-w-[75px] ${
+                activeTab === item.id ? 'bg-black text-white shadow-lg' : 'text-slate-400'
               }`}
             >
-              <span className="text-xl mb-1">{item.icon}</span>
-              <span className="text-[9px] font-black truncate w-full text-center uppercase">{TRANSLATIONS[language][item.id]}</span>
+              <span className="text-2xl mb-1">{item.icon}</span>
+              <span className="text-[9px] font-black uppercase text-center tracking-tighter">{TRANSLATIONS[language][item.id]}</span>
             </button>
           ))}
         </div>

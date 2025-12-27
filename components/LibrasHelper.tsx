@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 interface Sign {
   label: string;
@@ -10,179 +10,130 @@ interface Sign {
 }
 
 const BASIC_SIGNS: Sign[] = [
-  { 
-    label: 'Oi / Olá', 
-    icon: '👋', 
-    description: 'Mão aberta balançando lateralmente ou em "O" e depois levanta o dedo mínimo.', 
-    imageUrl: 'https://images.unsplash.com/photo-1516733968668-dbdce39c46ef?auto=format&fit=crop&q=80&w=400',
-    bgColor: 'bg-blue-50'
-  },
-  { 
-    label: 'Obrigado', 
-    icon: '🙏', 
-    description: 'Mão aberta tocando a testa e saindo para frente em direção à pessoa.', 
-    imageUrl: 'https://images.unsplash.com/photo-1532622785990-d2c36a76f5a6?auto=format&fit=crop&q=80&w=400',
-    bgColor: 'bg-green-50'
-  },
-  { 
-    label: 'Por favor', 
-    icon: '✨', 
-    description: 'Mão aberta descrevendo um círculo suave no centro do peito.', 
-    imageUrl: 'https://images.unsplash.com/photo-1518133910546-b6c2fb7d79e3?auto=format&fit=crop&q=80&w=400',
-    bgColor: 'bg-amber-50'
-  },
-  { 
-    label: 'Desculpa', 
-    icon: '😔', 
-    description: 'Mão fechada em "Y" (dedo polegar e mínimo abertos) circulando o peito.', 
-    imageUrl: 'https://images.unsplash.com/photo-1541178735463-ad79929255a2?auto=format&fit=crop&q=80&w=400',
-    bgColor: 'bg-rose-50'
-  },
-  { 
-    label: 'Comer', 
-    icon: '🍎', 
-    description: 'Ponta dos dedos unidas tocando a boca repetidamente.', 
-    imageUrl: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&q=80&w=400',
-    bgColor: 'bg-orange-50'
-  },
-  { 
-    label: 'Água', 
-    icon: '💧', 
-    description: 'Dedo indicador, médio e anelar abertos em "W", tocando o queixo.', 
-    imageUrl: 'https://images.unsplash.com/photo-1548839140-29a749e1cf4d?auto=format&fit=crop&q=80&w=400',
-    bgColor: 'bg-cyan-50'
-  },
+  { label: 'Oi / Olá', icon: '👋', description: 'Mão balançando lateralmente.', imageUrl: 'https://images.unsplash.com/photo-1549213821-4708d624e1d1?auto=format&fit=crop&q=80&w=400', bgColor: 'bg-blue-50' },
+  { label: 'Obrigado', icon: '🙏', description: 'Mão tocando a testa e saindo para frente.', imageUrl: 'https://images.unsplash.com/photo-1531353826977-0941b4779a1c?auto=format&fit=crop&q=80&w=400', bgColor: 'bg-green-50' },
+  { label: 'Por favor', icon: '✨', description: 'Mão aberta em círculo no peito.', imageUrl: 'https://images.unsplash.com/photo-1499209974431-9dac3adaf471?auto=format&fit=crop&q=80&w=400', bgColor: 'bg-amber-50' },
+  { label: 'Comer', icon: '🍎', description: 'Dedos unidos tocando a boca.', imageUrl: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&q=80&w=400', bgColor: 'bg-orange-50' },
 ];
 
 export const LibrasHelper: React.FC = () => {
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
-  const [recognition, setRecognition] = useState<any>(null);
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
+  const recognitionRef = useRef<any>(null);
 
   useEffect(() => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (SpeechRecognition) {
-      const rec = new SpeechRecognition();
-      rec.lang = 'pt-BR';
-      rec.continuous = true;
-      rec.interimResults = true;
+      const recognition = new SpeechRecognition();
+      recognition.lang = 'pt-BR';
+      recognition.continuous = true;
+      recognition.interimResults = true;
 
-      rec.onresult = (event: any) => {
-        let current = '';
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          current += event.results[i][0].transcript;
-        }
+      recognition.onresult = (event: any) => {
+        const current = Array.from(event.results)
+          .map((result: any) => result[0].transcript)
+          .join(' ');
         setTranscript(current);
       };
 
-      rec.onerror = () => setIsListening(false);
-      rec.onend = () => setIsListening(false);
-      setRecognition(rec);
+      recognition.onstart = () => setIsListening(true);
+      recognition.onend = () => setIsListening(false);
+      recognition.onerror = (event: any) => {
+        console.error('Speech recognition error:', event.error);
+        setIsListening(false);
+      };
+      
+      recognitionRef.current = recognition;
     }
+    
+    return () => {
+      if (recognitionRef.current) recognitionRef.current.stop();
+    };
   }, []);
 
   const toggleListening = () => {
+    if (!recognitionRef.current) {
+      alert("Seu navegador não suporta reconhecimento de voz.");
+      return;
+    }
+    
     if (isListening) {
-      recognition?.stop();
+      recognitionRef.current.stop();
     } else {
       setTranscript('');
-      recognition?.start();
-      setIsListening(true);
+      try {
+        recognitionRef.current.start();
+      } catch (e) {
+        console.error('Recognition start error:', e);
+        recognitionRef.current.stop();
+      }
     }
   };
 
   return (
-    <div className="p-6 max-w-5xl mx-auto">
-      <div className="text-center mb-10">
-        <h2 className="text-3xl font-black text-slate-800 mb-2">Apoio a Surdos e Mudos</h2>
-        <p className="text-slate-500 font-medium">Língua Brasileira de Sinais e Tradução de Voz.</p>
+    <div className="p-8 max-w-6xl mx-auto">
+      <div className="text-center mb-12">
+        <h2 className="text-5xl font-black text-3d mb-4 uppercase tracking-tighter">Ouvir com os Olhos 👂✨</h2>
+        <p className="text-slate-600 font-bold text-xl">Transforme voz em texto gigante para facilitar a leitura.</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-        {/* Bloco de Transcrição */}
-        <div className="bg-white rounded-[2.5rem] shadow-xl border-4 border-blue-50 p-8 flex flex-col gap-6 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-bl-[4rem] -mr-8 -mt-8 flex items-center justify-center p-8 opacity-20">
-            <span className="text-4xl">👂</span>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+        <div className="clay-card p-10 flex flex-col gap-8 min-h-[500px]">
+          <div className="flex items-center justify-between">
+            <h3 className="text-2xl font-black text-blue-600 uppercase tracking-tighter">Transcrição ao Vivo</h3>
+            {isListening && <div className="pulse-3d w-4 h-4 bg-blue-600 rounded-full"></div>}
           </div>
           
-          <div className="flex items-center justify-between relative z-10">
-            <h3 className="text-xl font-black text-blue-600 flex items-center gap-2">
-               Ouvir com os Olhos
-            </h3>
-            <span className="bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">Voz para Texto</span>
-          </div>
-          
-          <div className={`flex-1 min-h-[250px] p-8 rounded-[2rem] border-4 border-dashed flex items-center justify-center text-center transition-all duration-500 relative z-10 ${
-            isListening ? 'bg-blue-50 border-blue-300 shadow-inner' : 'bg-slate-50 border-slate-100'
-          }`}>
+          <div className="flex-1 inner-depth rounded-[3rem] p-10 flex items-center justify-center text-center overflow-y-auto">
             {transcript ? (
-              <p className="text-3xl font-black text-slate-800 leading-tight animate-fade-in">{transcript}</p>
+              <p className="text-5xl font-black text-black leading-tight break-words text-3d">
+                {transcript}
+              </p>
             ) : (
-              <div className="space-y-4">
-                <span className={`text-5xl block transition-transform duration-500 ${isListening ? 'scale-125' : ''}`}>
-                  {isListening ? '🎙️' : '🤫'}
-                </span>
-                <p className="text-slate-400 font-bold italic max-w-xs mx-auto">
-                  {isListening ? 'Fale agora...' : 'Toque no botão para transformar a voz em texto gigante.'}
-                </p>
+              <div className="opacity-40">
+                <span className="text-8xl block mb-4">{isListening ? '🎤' : '🤫'}</span>
+                <p className="text-2xl font-black text-slate-500 uppercase">{isListening ? 'Escutando você...' : 'Aperte o botão abaixo'}</p>
               </div>
             )}
           </div>
 
           <button
             onClick={toggleListening}
-            className={`w-full py-6 rounded-3xl font-black text-xl flex items-center justify-center gap-4 transition-all active:scale-95 shadow-2xl relative z-10 ${
-              isListening ? 'bg-rose-500 text-white animate-pulse' : 'bg-blue-600 text-white hover:bg-blue-700'
+            className={`w-full py-8 rounded-[2.5rem] font-black text-2xl flex items-center justify-center gap-4 transition-all clay-button shadow-xl ${
+              isListening ? 'bg-rose-600 text-white shadow-rose-200 border-none' : 'bg-white text-blue-600'
             }`}
           >
-            <span className="text-3xl">{isListening ? '🛑' : '🎤'}</span>
-            {isListening ? 'Parar' : 'Ativar Microfone'}
+            <span>{isListening ? '🛑 PARAR AGORA' : '🎤 ATIVAR MICROFONE'}</span>
           </button>
         </div>
 
-        {/* Guia de LIBRAS Rápido */}
         <div className="space-y-6">
-          <div className="flex items-center justify-between px-2">
-            <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest">Sinais Fundamentais</h3>
-          </div>
-          
-          <div className="grid grid-cols-1 gap-4 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
+          <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest px-4">Sinais Rápidos (LIBRAS)</h3>
+          <div className="grid grid-cols-1 gap-6 overflow-y-auto max-h-[600px] pr-4 no-scrollbar">
             {BASIC_SIGNS.map((sign) => (
-              <div key={sign.label} className="bg-white p-5 rounded-[2rem] border-2 border-slate-50 shadow-sm flex items-center gap-6 group hover:border-blue-200 transition-all hover:shadow-md animate-fade-in">
-                <div className={`w-28 h-28 rounded-2xl overflow-hidden shadow-inner flex-shrink-0 relative ${sign.bgColor}`}>
-                  {!imageErrors[sign.label] ? (
+              <div key={sign.label} className="clay-card p-6 flex items-center gap-6 group hover:scale-[1.02] bg-white border border-slate-100">
+                <div className={`w-28 h-28 rounded-3xl overflow-hidden shadow-inner ${sign.bgColor} flex-shrink-0 flex items-center justify-center`}>
+                  {imageErrors[sign.label] ? (
+                    <span className="text-5xl">{sign.icon}</span>
+                  ) : (
                     <img 
                       src={sign.imageUrl} 
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
-                      alt={sign.label}
-                      onError={() => setImageErrors(prev => ({ ...prev, [sign.label]: true }))}
+                      className="w-full h-full object-cover p-1 rounded-3xl" 
+                      alt={sign.label} 
+                      onError={() => setImageErrors(prev => ({...prev, [sign.label]: true}))}
                     />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-5xl font-black opacity-50">
-                      {sign.icon}
-                    </div>
                   )}
-                  {/* Overlay de Emoji Permanente */}
-                  <div className="absolute top-1 right-1 bg-white/80 rounded-lg p-1 text-sm shadow-sm z-20">
-                    {sign.icon}
-                  </div>
                 </div>
                 <div>
-                  <h4 className="font-black text-xl text-slate-800 mb-1">{sign.label}</h4>
-                  <p className="text-sm text-slate-600 font-bold leading-relaxed">{sign.description}</p>
+                  <h4 className="text-3xl font-black text-3d mb-1">{sign.label}</h4>
+                  <p className="text-slate-500 font-bold text-lg leading-snug">{sign.description}</p>
                 </div>
               </div>
             ))}
           </div>
         </div>
       </div>
-      
-      <style>{`
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #E2E8F0; border-radius: 10px; }
-      `}</style>
     </div>
   );
 };

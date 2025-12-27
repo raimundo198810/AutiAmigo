@@ -51,26 +51,26 @@ export const VisualRoutine: React.FC = () => {
   };
 
   return (
-    <div className="p-4 max-w-2xl mx-auto">
+    <div className="p-8 max-w-2xl mx-auto">
       <div className="mb-8">
-        <h2 className="text-3xl font-black text-slate-800">Minha Rotina Visual 📅</h2>
-        <p className="text-slate-500 font-bold">Acompanhe suas atividades do dia.</p>
+        <h2 className="text-4xl font-black text-3d">Minha Rotina 3D</h2>
+        <p className="text-slate-600 font-bold">Acompanhe suas atividades do dia.</p>
       </div>
       
-      <form onSubmit={addTask} className="mb-10 bg-white p-6 rounded-[2rem] shadow-lg border-4 border-blue-50 flex flex-col gap-4">
+      <form onSubmit={addTask} className="mb-10 bg-white p-8 rounded-[2.5rem] shadow-lg border border-slate-200 flex flex-col gap-4 clay-button">
         <div className="flex flex-col sm:flex-row gap-4">
           <input
             type="text"
             value={newTask}
             onChange={(e) => setNewTask(e.target.value)}
             placeholder="O que vamos fazer?"
-            className="flex-1 p-4 rounded-2xl border-2 border-slate-100 focus:border-blue-300 outline-none bg-slate-50/50 font-bold"
+            className="flex-1 p-5 rounded-2xl border-none inner-depth outline-none bg-slate-100 font-bold"
           />
           <input
             type="time"
             value={newTime}
             onChange={(e) => setNewTime(e.target.value)}
-            className="p-4 rounded-2xl border-2 border-slate-100 focus:border-blue-300 outline-none bg-slate-50/50 font-bold w-full sm:w-32"
+            className="p-5 rounded-2xl border-none inner-depth outline-none bg-slate-100 font-bold w-full sm:w-36"
           />
         </div>
         <input
@@ -78,53 +78,53 @@ export const VisualRoutine: React.FC = () => {
           value={newImageUrl}
           onChange={(e) => setNewImageUrl(e.target.value)}
           placeholder="Link da imagem (opcional)"
-          className="w-full p-4 rounded-2xl border-2 border-slate-100 focus:border-blue-300 outline-none bg-slate-50/50 font-bold"
+          className="w-full p-5 rounded-2xl border-none inner-depth outline-none bg-slate-100 font-bold"
         />
-        <button type="submit" className="bg-blue-600 text-white py-4 rounded-2xl font-black text-lg hover:bg-blue-700 shadow-xl shadow-blue-100 transition-all active:scale-[0.98]">
+        <button type="submit" className="bg-black text-white py-5 rounded-2xl font-black text-xl hover:bg-slate-900 shadow-xl transition-all clay-button">
           + Adicionar à Rotina
         </button>
       </form>
 
-      <div className="space-y-4">
+      <div className="space-y-6">
         {tasks.map((task) => (
           <div
             key={task.id}
             onClick={() => toggleTask(task.id)}
-            className={`group p-4 rounded-[2.5rem] flex items-center justify-between cursor-pointer transition-all border-4 ${
+            className={`group p-6 rounded-[3rem] flex items-center justify-between cursor-pointer transition-all border-2 ${
               task.completed 
-                ? 'bg-slate-50 border-slate-100 opacity-60 scale-95' 
-                : 'bg-white shadow-md border-transparent hover:border-blue-100 active:scale-95'
+                ? 'bg-slate-100 border-slate-200 opacity-60 scale-95' 
+                : 'bg-white shadow-xl border-white hover:border-slate-200 clay-button'
             }`}
           >
-            <div className="flex items-center gap-5">
+            <div className="flex items-center gap-6">
               <div className="relative">
                 {task.imageUrl && !imageErrors[task.id] ? (
                   <img 
                     src={task.imageUrl} 
                     alt={task.text} 
-                    className={`w-20 h-20 rounded-[1.5rem] object-cover border-4 ${task.completed ? 'border-slate-200 grayscale' : 'border-blue-50'}`} 
+                    className={`w-24 h-24 rounded-[2rem] object-cover border-4 ${task.completed ? 'border-slate-300 grayscale' : 'border-white shadow-sm'}`} 
                     onError={() => setImageErrors(prev => ({ ...prev, [task.id]: true }))}
                   />
                 ) : (
-                  <div className={`w-20 h-20 rounded-[1.5rem] flex items-center justify-center text-4xl ${task.completed ? 'bg-slate-200' : 'bg-blue-50 text-blue-400'}`}>
+                  <div className={`w-24 h-24 rounded-[2rem] flex items-center justify-center text-5xl ${task.completed ? 'bg-slate-200' : 'bg-slate-100 text-slate-500 shadow-inner'}`}>
                     {task.text.toLowerCase().includes('comer') || task.text.toLowerCase().includes('café') || task.text.toLowerCase().includes('almoço') ? '🍱' : 
                      task.text.toLowerCase().includes('dente') ? '🪥' :
                      task.text.toLowerCase().includes('estuda') ? '📚' : '📅'}
                   </div>
                 )}
                 {task.completed && (
-                  <div className="absolute -top-2 -right-2 bg-green-500 text-white w-8 h-8 rounded-full flex items-center justify-center shadow-lg font-black text-sm border-4 border-white">
+                  <div className="absolute -top-3 -right-3 bg-black text-white w-10 h-10 rounded-full flex items-center justify-center shadow-xl font-black text-sm border-4 border-white">
                     ✓
                   </div>
                 )}
               </div>
               
               <div>
-                <span className={`text-xl font-black block leading-none mb-1 ${task.completed ? 'line-through text-slate-400' : 'text-slate-800'}`}>
+                <span className={`text-2xl font-black block leading-tight ${task.completed ? 'line-through text-slate-400' : 'text-3d'}`}>
                   {task.text}
                 </span>
                 {task.time && (
-                  <span className={`font-black px-3 py-1 rounded-full text-[10px] uppercase tracking-widest ${task.completed ? 'bg-slate-200 text-slate-400' : 'bg-blue-100 text-blue-600'}`}>
+                  <span className={`font-black px-4 py-1.5 rounded-full text-[11px] uppercase tracking-widest mt-2 inline-block ${task.completed ? 'bg-slate-200 text-slate-400' : 'bg-black text-white'}`}>
                     ⏰ {task.time}
                   </span>
                 )}
@@ -133,19 +133,19 @@ export const VisualRoutine: React.FC = () => {
             
             <button 
               onClick={(e) => deleteTask(task.id, e)}
-              className="text-slate-200 hover:text-rose-500 p-4 transition-colors opacity-0 group-hover:opacity-100"
+              className="text-slate-300 hover:text-black p-4 transition-colors opacity-0 group-hover:opacity-100"
               title="Remover"
             >
-              <span className="text-2xl">✕</span>
+              <span className="text-3xl font-black">✕</span>
             </button>
           </div>
         ))}
       </div>
       
       {tasks.length === 0 && (
-        <div className="text-center py-20 bg-slate-50 rounded-[3rem] border-4 border-dashed border-slate-100">
-          <span className="text-6xl mb-4 block">✨</span>
-          <p className="text-slate-400 font-black">Nenhuma tarefa agendada para hoje.</p>
+        <div className="text-center py-20 bg-slate-100 rounded-[4rem] border-4 border-dashed border-slate-200">
+          <span className="text-7xl mb-6 block">✨</span>
+          <p className="text-slate-400 font-black text-xl">Nenhuma tarefa agendada.</p>
         </div>
       )}
     </div>

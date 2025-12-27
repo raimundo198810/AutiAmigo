@@ -1,19 +1,25 @@
 
 import React, { useState } from 'react';
 import { generateSocialStory } from '../services/geminiService.ts';
+import { Language } from '../types.ts';
 
-export const SocialStoryGenerator: React.FC = () => {
+// Added lang prop to interface
+interface SocialStoryGeneratorProps {
+  lang: Language;
+}
+
+export const SocialStoryGenerator: React.FC<SocialStoryGeneratorProps> = ({ lang }) => {
   const [situation, setSituation] = useState('');
   const [story, setStory] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // Fix: Simplificado handleGenerate para remover tratamento de erro de API Key manual
+  // Updated handleGenerate to pass lang to generateSocialStory
   const handleGenerate = async () => {
     if (!situation.trim()) return;
     setLoading(true);
     setStory(null);
     try {
-      const result = await generateSocialStory(situation);
+      const result = await generateSocialStory(situation, lang);
       setStory(result);
     } catch (err) {
       setStory("Erro ao conectar com o servidor.");

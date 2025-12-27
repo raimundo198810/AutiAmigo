@@ -1,7 +1,7 @@
 
 import { UserProfile, ActivityLog, CommunicationCard, Task } from '../types.ts';
 
-const DB_PREFIX = 'autiamigo_db_v1_';
+const DB_PREFIX = 'ajuda_autista_db_v1_';
 
 export const DatabaseService = {
   // --- GERENCIAMENTO DE PERFIS ---

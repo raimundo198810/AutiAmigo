@@ -73,10 +73,12 @@ const TRACKS: Track[] = [
 export const CalmZone: React.FC = () => {
   const [isBreathing, setIsBreathing] = useState(false);
   const [breathText, setBreathText] = useState('Clique para começar');
-  const [activeSound, setActiveSound] = useState<SoundType>('none');
-  const [volume, setVolume] = useState(0.5);
+  const [activeSounds, setActiveSounds] = useState<SoundType[]>([]);
+  const [volumes, setVolumes] = useState<Record<string, number>>(
+    TRACKS.reduce((acc, track) => ({ ...acc, [track.id]: 0.5 }), {})
+  );
   
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const audioRefs = useRef<Record<string, HTMLAudioElement>>({});
 
   useEffect(() => {
     let interval: any;
@@ -95,63 +97,61 @@ export const CalmZone: React.FC = () => {
     return () => clearInterval(interval);
   }, [isBreathing]);
 
-  useEffect(() => {
-    if (activeSound !== 'none') {
-      const track = TRACKS.find(t => t.id === activeSound);
-      if (track) {
-        if (audioRef.current) {
-          audioRef.current.pause();
-        }
-        audioRef.current = new Audio(track.url);
-        audioRef.current.loop = true;
-        audioRef.current.volume = volume;
-        audioRef.current.play().catch(e => console.error("Erro ao reproduzir áudio:", e));
-      }
-    } else {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current = null;
-      }
-    }
-
-    return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-      }
-    };
-  }, [activeSound]);
-
-  useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.volume = volume;
-    }
-  }, [volume]);
-
   const toggleSound = (type: SoundType) => {
-    setActiveSound(prev => prev === type ? 'none' : type);
+    if (type === 'none') return;
+
+    if (activeSounds.includes(type)) {
+      // Desativar som
+      if (audioRefs.current[type]) {
+        audioRefs.current[type].pause();
+        delete audioRefs.current[type];
+      }
+      setActiveSounds(prev => prev.filter(s => s !== type));
+    } else {
+      // Ativar som
+      const track = TRACKS.find(t => t.id === type);
+      if (track) {
+        const audio = new Audio(track.url);
+        audio.loop = true;
+        audio.volume = volumes[type];
+        audio.play().catch(e => console.error("Erro ao reproduzir áudio:", e));
+        audioRefs.current[type] = audio;
+        setActiveSounds(prev => [...prev, type]);
+      }
+    }
   };
 
-  const currentTrack = TRACKS.find(t => t.id === activeSound);
+  const handleVolumeChange = (type: SoundType, newVolume: number) => {
+    setVolumes(prev => ({ ...prev, [type]: newVolume }));
+    if (audioRefs.current[type]) {
+      audioRefs.current[type].volume = newVolume;
+    }
+  };
+
+  useEffect(() => {
+    // Cleanup ao desmontar
+    return () => {
+      Object.values(audioRefs.current).forEach(audio => audio.pause());
+    };
+  }, []);
 
   return (
     <div className="p-4 flex flex-col items-center pb-24">
       <div className="text-center mb-10">
-        <h2 className="text-3xl font-black text-slate-800 mb-2">Central Sensorial</h2>
-        <p className="text-slate-500">Sons e ritmos para ajudar no foco e na calma.</p>
+        <h2 className="text-3xl font-black text-slate-800 mb-2">Mixer Sensorial</h2>
+        <p className="text-slate-500">Misture sons e ajuste volumes individuais para criar seu ambiente perfeito.</p>
       </div>
       
-      <div className="w-full max-w-4xl grid grid-cols-1 lg:grid-cols-2 gap-10">
+      <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-12 gap-10">
         
-        {/* Lado Esquerdo: Player e Respiração */}
-        <div className="flex flex-col items-center gap-8">
-          {/* Círculo de Respiração */}
+        {/* Lado Esquerdo: Respiração */}
+        <div className="lg:col-span-4 flex flex-col items-center gap-8 lg:sticky lg:top-24 h-fit">
           <div className="relative flex items-center justify-center">
             <div 
               className={`w-64 h-64 rounded-full border-8 border-blue-200 flex items-center justify-center transition-all duration-[4000ms] ease-in-out shadow-inner relative z-10 overflow-hidden ${
                 isBreathing && (breathText === 'Inspire...' || breathText === 'Segure...') ? 'scale-110 bg-blue-50' : 'scale-100 bg-white'
               }`}
             >
-              {/* Imagem de Fundo para o Círculo */}
               <img 
                 src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&q=80&w=400"
                 className={`absolute inset-0 w-full h-full object-cover opacity-10 transition-transform duration-[4000ms] ${isBreathing ? 'scale-150' : 'scale-100'}`}
@@ -165,8 +165,7 @@ export const CalmZone: React.FC = () => {
               </div>
             </div>
             
-            {/* Efeito Visual de Ondas quando som está ativo */}
-            {activeSound !== 'none' && (
+            {activeSounds.length > 0 && (
               <div className="absolute inset-0 z-0">
                 <div className="absolute inset-0 bg-blue-400/20 rounded-full animate-ping"></div>
                 <div className="absolute inset-0 bg-blue-300/10 rounded-full animate-pulse scale-150"></div>
@@ -187,146 +186,145 @@ export const CalmZone: React.FC = () => {
             )}
           </button>
 
-          {/* Player Ativo */}
-          {activeSound !== 'none' && currentTrack && (
-            <div className="w-full bg-slate-900 text-white p-6 rounded-[2.5rem] shadow-2xl animate-fade-in border-4 border-blue-500/30 overflow-hidden relative">
-              <img src={currentTrack.imageUrl} className="absolute inset-0 w-full h-full object-cover opacity-20" alt="" />
-              <div className="relative z-10">
-                <div className="flex items-center gap-4 mb-6">
-                  <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center text-3xl animate-bounce">
-                    {currentTrack.icon}
-                  </div>
-                  <div className="flex-1">
-                    <span className="text-xs font-bold text-blue-400 uppercase tracking-tighter">Tocando agora</span>
-                    <h3 className="text-xl font-black truncate">{currentTrack.label}</h3>
-                  </div>
-                  <button 
-                    onClick={() => setActiveSound('none')}
-                    className="bg-white/10 p-3 rounded-full hover:bg-white/20 transition-colors"
-                  >
-                    ✕
-                  </button>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="flex items-center gap-4">
-                    <span className="text-xl">🔈</span>
-                    <input 
-                      type="range"
-                      min="0"
-                      max="1"
-                      step="0.05"
-                      value={volume}
-                      onChange={(e) => setVolume(parseFloat(e.target.value))}
-                      className="flex-1 h-3 bg-white/20 rounded-lg appearance-none cursor-pointer accent-white"
-                    />
-                    <span className="text-xl">🔊</span>
-                  </div>
-                  <div className="flex justify-center gap-1 h-8 items-end">
-                     {[...Array(12)].map((_, i) => (
-                       <div 
-                        key={i} 
-                        className="w-1 bg-blue-400 rounded-full animate-music-bar"
-                        style={{ 
-                          height: `${Math.random() * 100}%`,
-                          animationDelay: `${i * 0.1}s`
-                        }}
-                       ></div>
-                     ))}
-                  </div>
-                </div>
-              </div>
+          {activeSounds.length > 0 && (
+            <div className="bg-blue-50 p-6 rounded-3xl border border-blue-100 w-full text-center">
+              <p className="text-blue-600 font-bold text-sm">Mistura Ativa: {activeSounds.length} sons</p>
+              <button 
+                onClick={() => {
+                  Object.values(audioRefs.current).forEach(a => a.pause());
+                  audioRefs.current = {};
+                  setActiveSounds([]);
+                }}
+                className="mt-2 text-xs font-black text-blue-400 uppercase tracking-widest hover:text-blue-600 transition-colors"
+              >
+                Desligar tudo
+              </button>
             </div>
           )}
         </div>
 
-        {/* Lado Direito: Seleção de Sons */}
-        <div className="space-y-8">
-          <section>
-            <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-4 ml-2">Ambiente Natural</h3>
-            <div className="grid grid-cols-2 gap-4">
-              {TRACKS.filter(t => t.category === 'ambiente').map(track => (
-                <SoundCard 
-                  key={track.id} 
-                  track={track} 
-                  isActive={activeSound === track.id} 
-                  onToggle={() => toggleSound(track.id)} 
-                />
-              ))}
-            </div>
-          </section>
+        {/* Lado Direito: Mixer de Cartões */}
+        <div className="lg:col-span-8 space-y-12">
+          <MixerSection 
+            title="Ambiente Natural" 
+            tracks={TRACKS.filter(t => t.category === 'ambiente')}
+            activeSounds={activeSounds}
+            volumes={volumes}
+            onToggle={toggleSound}
+            onVolumeChange={handleVolumeChange}
+          />
 
-          <section>
-            <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-4 ml-2">Música Calma</h3>
-            <div className="grid grid-cols-2 gap-4">
-              {TRACKS.filter(t => t.category === 'musica').map(track => (
-                <SoundCard 
-                  key={track.id} 
-                  track={track} 
-                  isActive={activeSound === track.id} 
-                  onToggle={() => toggleSound(track.id)} 
-                />
-              ))}
-            </div>
-          </section>
+          <MixerSection 
+            title="Música Relaxante" 
+            tracks={TRACKS.filter(t => t.category === 'musica')}
+            activeSounds={activeSounds}
+            volumes={volumes}
+            onToggle={toggleSound}
+            onVolumeChange={handleVolumeChange}
+          />
 
-          <section>
-            <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-4 ml-2">Sons Terapêuticos</h3>
-            <div className="grid grid-cols-2 gap-4">
-              {TRACKS.filter(t => t.category === 'terapeutico').map(track => (
-                <SoundCard 
-                  key={track.id} 
-                  track={track} 
-                  isActive={activeSound === track.id} 
-                  onToggle={() => toggleSound(track.id)} 
-                />
-              ))}
-            </div>
-          </section>
+          <MixerSection 
+            title="Sons Terapêuticos" 
+            tracks={TRACKS.filter(t => t.category === 'terapeutico')}
+            activeSounds={activeSounds}
+            volumes={volumes}
+            onToggle={toggleSound}
+            onVolumeChange={handleVolumeChange}
+          />
         </div>
       </div>
-
-      <style>{`
-        @keyframes music-bar {
-          0%, 100% { height: 10%; }
-          50% { height: 100%; }
-        }
-        .animate-music-bar {
-          animation: music-bar 1s ease-in-out infinite;
-        }
-      `}</style>
     </div>
   );
 };
 
-const SoundCard: React.FC<{ track: Track, isActive: boolean, onToggle: () => void }> = ({ track, isActive, onToggle }) => (
-  <button
-    onClick={onToggle}
-    className={`relative p-5 rounded-3xl border-2 transition-all text-left flex flex-col gap-2 group overflow-hidden ${
+const MixerSection: React.FC<{ 
+  title: string, 
+  tracks: Track[], 
+  activeSounds: SoundType[], 
+  volumes: Record<string, number>,
+  onToggle: (id: SoundType) => void,
+  onVolumeChange: (id: SoundType, vol: number) => void
+}> = ({ title, tracks, activeSounds, volumes, onToggle, onVolumeChange }) => (
+  <section>
+    <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-6 ml-2">{title}</h3>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {tracks.map(track => (
+        <SoundCard 
+          key={track.id} 
+          track={track} 
+          isActive={activeSounds.includes(track.id)} 
+          volume={volumes[track.id]}
+          onToggle={() => onToggle(track.id)} 
+          onVolumeChange={(v) => onVolumeChange(track.id, v)}
+        />
+      ))}
+    </div>
+  </section>
+);
+
+const SoundCard: React.FC<{ 
+  track: Track, 
+  isActive: boolean, 
+  volume: number,
+  onToggle: () => void,
+  onVolumeChange: (vol: number) => void
+}> = ({ track, isActive, volume, onToggle, onVolumeChange }) => (
+  <div
+    className={`relative p-6 rounded-[2.5rem] border-2 transition-all flex flex-col gap-4 group overflow-hidden ${
       isActive 
-        ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-200 scale-[1.02]' 
+        ? 'bg-white border-blue-500 shadow-xl shadow-blue-100 scale-[1.02]' 
         : 'bg-white border-slate-100 hover:border-blue-200 text-slate-700 shadow-sm'
     }`}
   >
-    {/* Imagem de Fundo do Card */}
-    <img 
-      src={track.imageUrl} 
-      className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${isActive ? 'opacity-30' : 'opacity-10 group-hover:opacity-20'}`} 
-      alt="" 
-    />
-    
-    <div className="relative z-10">
-      <div className={`text-3xl mb-1 w-12 h-12 flex items-center justify-center rounded-2xl transition-colors ${
-        isActive ? 'bg-white/20' : 'bg-slate-50 group-hover:bg-blue-50'
-      }`}>
+    <div className="flex items-center gap-4 relative z-10">
+      <button
+        onClick={onToggle}
+        className={`text-3xl w-14 h-14 flex items-center justify-center rounded-2xl transition-all shadow-sm shrink-0 ${
+          isActive ? 'bg-blue-600 text-white animate-pulse' : 'bg-slate-50 group-hover:bg-blue-50'
+        }`}
+      >
         {track.icon}
-      </div>
-      <div>
-        <h4 className="font-black text-sm">{track.label}</h4>
-        <p className={`text-[10px] leading-tight font-medium ${isActive ? 'text-blue-100' : 'text-slate-400'}`}>
+      </button>
+      
+      <div className="flex-1">
+        <h4 className="font-black text-slate-800">{track.label}</h4>
+        <p className={`text-[10px] leading-tight font-medium ${isActive ? 'text-blue-500' : 'text-slate-400'}`}>
           {track.description}
         </p>
       </div>
+
+      <button 
+        onClick={onToggle}
+        className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+          isActive ? 'bg-rose-50 text-rose-500' : 'bg-blue-50 text-blue-600'
+        }`}
+      >
+        {isActive ? 'Ligado' : 'Ligar'}
+      </button>
     </div>
-  </button>
+
+    {isActive && (
+      <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-2xl animate-fade-in relative z-10">
+        <span className="text-sm">🔈</span>
+        <input 
+          type="range"
+          min="0"
+          max="1"
+          step="0.01"
+          value={volume}
+          onClick={(e) => e.stopPropagation()}
+          onChange={(e) => onVolumeChange(parseFloat(e.target.value))}
+          className="flex-1 h-2 bg-blue-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+        />
+        <span className="text-sm">🔊</span>
+      </div>
+    )}
+
+    {/* Imagem de Fundo do Card */}
+    <img 
+      src={track.imageUrl} 
+      className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 pointer-events-none ${isActive ? 'opacity-5' : 'opacity-0'}`} 
+      alt="" 
+    />
+  </div>
 );

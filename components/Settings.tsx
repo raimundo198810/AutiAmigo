@@ -4,14 +4,14 @@ import React from 'react';
 export const Settings: React.FC = () => {
   const exportData = () => {
     const data = {
-      cards: localStorage.getItem('autiamigo_custom_cards'),
-      routine: localStorage.getItem('autiamigo_routine')
+      cards: localStorage.getItem('ajuda_autista_custom_cards'),
+      routine: localStorage.getItem('ajuda_autista_routine')
     };
     const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `autiamigo-backup-${new Date().toISOString().split('T')[0]}.json`;
+    a.download = `ajuda-autista-backup-${new Date().toISOString().split('T')[0]}.json`;
     a.click();
   };
 
@@ -23,8 +23,8 @@ export const Settings: React.FC = () => {
     reader.onload = (e) => {
       try {
         const data = JSON.parse(e.target?.result as string);
-        if (data.cards) localStorage.setItem('autiamigo_custom_cards', data.cards);
-        if (data.routine) localStorage.setItem('autiamigo_routine', data.routine);
+        if (data.cards) localStorage.setItem('ajuda_autista_custom_cards', data.cards);
+        if (data.routine) localStorage.setItem('ajuda_autista_routine', data.routine);
         alert('Dados importados com sucesso! O aplicativo irá recarregar.');
         window.location.reload();
       } catch (err) {
@@ -36,8 +36,8 @@ export const Settings: React.FC = () => {
 
   const resetToDefaults = () => {
     if (confirm('Isso apagará seus cartões personalizados e voltará para o padrão original. Continuar?')) {
-      localStorage.removeItem('autiamigo_custom_cards');
-      localStorage.removeItem('autiamigo_routine');
+      localStorage.removeItem('ajuda_autista_custom_cards');
+      localStorage.removeItem('ajuda_autista_routine');
       window.location.reload();
     }
   };
@@ -82,7 +82,7 @@ export const Settings: React.FC = () => {
         </div>
 
         <div className="bg-amber-50 p-6 rounded-3xl border border-amber-100">
-          <h3 className="text-lg font-bold text-amber-800 mb-2">💡 Sobre o AutiAmigo</h3>
+          <h3 className="text-lg font-bold text-amber-800 mb-2">💡 Sobre o ajuda-autista</h3>
           <p className="text-amber-700 text-sm leading-relaxed">
             Este aplicativo foi criado para apoiar a autonomia e a comunicação de pessoas autistas e PCDs. 
             Ele é totalmente gratuito e focado em privacidade: seus dados nunca saem do seu dispositivo.

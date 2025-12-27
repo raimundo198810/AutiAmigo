@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { generateDailyIncentive } from '../services/geminiService.ts';
+import { Language } from '../types.ts';
 
 interface Achievement {
   id: string;
@@ -20,7 +21,12 @@ const INITIAL_ACHIEVEMENTS: Achievement[] = [
   { id: '6', title: 'Amigo das Libras', icon: '🤟', unlocked: false, description: 'Viu os sinais de inclusão.', color: 'bg-teal-500' },
 ];
 
-export const IncentiveCenter: React.FC = () => {
+// Added lang prop to interface
+interface IncentiveCenterProps {
+  lang: Language;
+}
+
+export const IncentiveCenter: React.FC<IncentiveCenterProps> = ({ lang }) => {
   const [dailyMission, setDailyMission] = useState('Buscando uma missão especial para você...');
   const [achievements, setAchievements] = useState<Achievement[]>(() => {
     try {
@@ -32,17 +38,18 @@ export const IncentiveCenter: React.FC = () => {
   });
   const [showReward, setShowReward] = useState(false);
 
+  // Updated useEffect to pass lang to generateDailyIncentive
   useEffect(() => {
     const fetchMission = async () => {
       try {
-        const mission = await generateDailyIncentive();
+        const mission = await generateDailyIncentive(lang);
         setDailyMission(mission);
       } catch (e) {
         setDailyMission("Missão de hoje: Espalhar sorrisos! 😊");
       }
     };
     fetchMission();
-  }, []);
+  }, [lang]);
 
   useEffect(() => {
     localStorage.setItem('autiamigo_achievements', JSON.stringify(achievements));

@@ -1,9 +1,12 @@
 
+export type Language = 'pt' | 'en' | 'es' | 'fr';
+
 export interface CommunicationCard {
   id: string;
   label: string;
   icon: string;
   imageUrl?: string;
+  audioUrl?: string;
   color: string;
   category: 'necessidades' | 'sentimentos' | 'atividades';
 }
@@ -16,7 +19,23 @@ export interface Task {
   imageUrl?: string;
 }
 
-// Fix: Adicionada interface UserProfile para o ProfileManager
+export interface Lesson {
+  id: string;
+  title: string;
+  content: string;
+  icon: string;
+  completed: boolean;
+}
+
+export interface Course {
+  id: string;
+  title: string;
+  category: string;
+  icon: string;
+  color: string;
+  lessons: Lesson[];
+}
+
 export interface UserProfile {
   id: string;
   name: string;
@@ -25,7 +44,6 @@ export interface UserProfile {
   createdAt: number;
 }
 
-// Fix: Adicionada interface ActivityLog para o DatabaseService
 export interface ActivityLog {
   id: string;
   timestamp: number;
@@ -33,4 +51,4 @@ export interface ActivityLog {
   detail: string;
 }
 
-export type AppTab = 'board' | 'routine' | 'calm' | 'stories' | 'signs' | 'study' | 'games' | 'incentives' | 'settings';
+export type AppTab = 'board' | 'routine' | 'calm' | 'stories' | 'signs' | 'study' | 'courses' | 'games' | 'incentives' | 'settings' | 'sos' | 'noise' | 'consultant';

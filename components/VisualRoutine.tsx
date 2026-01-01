@@ -1,153 +1,125 @@
 
 import React, { useState, useEffect } from 'react';
 import { Task } from '../types.ts';
+import { DatabaseService } from '../services/databaseService.ts';
 
 const INITIAL_TASKS: Task[] = [
-  { id: '1', text: 'Escovar os dentes', completed: false, time: '08:00', imageUrl: 'https://images.unsplash.com/photo-1583947215259-38e31be8751f?auto=format&fit=crop&q=80&w=200' },
-  { id: '2', text: 'Tomar café da manhã', completed: false, time: '08:30', imageUrl: 'https://images.unsplash.com/photo-1494390248081-4e521a5940db?auto=format&fit=crop&q=80&w=200' },
-  { id: '3', text: 'Hora de Estudar', completed: false, time: '09:00', imageUrl: 'https://images.unsplash.com/photo-1454165833767-023000b953d1?auto=format&fit=crop&q=80&w=200' },
-  { id: '4', text: 'Almoço', completed: false, time: '12:00', imageUrl: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&q=80&w=200' },
+  { 
+    id: '1', 
+    text: 'Escovar os dentes', 
+    completed: false, 
+    time: '08:00', 
+    imageUrl: 'https://images.unsplash.com/photo-1583947215259-38e31be8751f?auto=format&fit=crop&q=80&w=400' 
+  },
+  { 
+    id: '2', 
+    text: 'Café da Manhã', 
+    completed: false, 
+    time: '08:30', 
+    imageUrl: 'https://images.unsplash.com/photo-1525351484163-7529414344d8?auto=format&fit=crop&q=80&w=400' 
+  },
+  { 
+    id: '3', 
+    text: 'Hora da Escola', 
+    completed: false, 
+    time: '09:00', 
+    imageUrl: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&q=80&w=400' 
+  },
+  { 
+    id: '4', 
+    text: 'Lanche Saudável', 
+    completed: false, 
+    time: '10:30', 
+    imageUrl: 'https://images.unsplash.com/photo-1567620905732-2d1ec7bb7445?auto=format&fit=crop&q=80&w=400' 
+  },
 ];
 
 export const VisualRoutine: React.FC = () => {
   const [tasks, setTasks] = useState<Task[]>(() => {
-    const saved = localStorage.getItem('autiamigo_routine');
-    return saved ? JSON.parse(saved) : INITIAL_TASKS;
+    return DatabaseService.getCollection<Task[]>('visual_routine', INITIAL_TASKS);
   });
 
-  const [newTask, setNewTask] = useState('');
-  const [newTime, setNewTime] = useState('');
-  const [newImageUrl, setNewImageUrl] = useState('');
-  const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
-
   useEffect(() => {
-    localStorage.setItem('autiamigo_routine', JSON.stringify(tasks));
+    DatabaseService.saveCollection('visual_routine', tasks);
   }, [tasks]);
 
   const toggleTask = (id: string) => {
     setTasks(tasks.map(t => t.id === id ? { ...t, completed: !t.completed } : t));
+    DatabaseService.logActivity('task_complete', `Tarefa atualizada: ${id}`);
   };
 
-  const addTask = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newTask.trim()) return;
-    setTasks([...tasks, { 
-      id: Date.now().toString(), 
-      text: newTask, 
-      completed: false, 
-      time: newTime || undefined,
-      imageUrl: newImageUrl || undefined
-    }]);
-    setNewTask('');
-    setNewTime('');
-    setNewImageUrl('');
-  };
-
-  const deleteTask = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (confirm('Deseja remover este item da rotina?')) {
-      setTasks(tasks.filter(t => t.id !== id));
-    }
-  };
+  const progress = (tasks.filter(t => t.completed).length / tasks.length) * 100;
 
   return (
-    <div className="p-8 max-w-2xl mx-auto">
-      <div className="mb-8">
-        <h2 className="text-4xl font-black text-3d">Minha Rotina 3D</h2>
-        <p className="text-slate-600 font-bold">Acompanhe suas atividades do dia.</p>
-      </div>
-      
-      <form onSubmit={addTask} className="mb-10 bg-white p-8 rounded-[2.5rem] shadow-lg border border-slate-200 flex flex-col gap-4 clay-button">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <input
-            type="text"
-            value={newTask}
-            onChange={(e) => setNewTask(e.target.value)}
-            placeholder="O que vamos fazer?"
-            className="flex-1 p-5 rounded-2xl border-none inner-depth outline-none bg-slate-100 font-bold"
-          />
-          <input
-            type="time"
-            value={newTime}
-            onChange={(e) => setNewTime(e.target.value)}
-            className="p-5 rounded-2xl border-none inner-depth outline-none bg-slate-100 font-bold w-full sm:w-36"
-          />
+    <div className="max-w-4xl mx-auto space-y-16 animate-fade-in">
+      {/* Header Bento Card */}
+      <div className="glass-card p-12 rounded-[3.5rem] flex flex-col md:flex-row justify-between items-center gap-8 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl -mr-32 -mt-32"></div>
+        <div className="relative z-10 text-center md:text-left">
+          <h2 className="text-5xl font-black text-slate-800 tracking-tighter mb-2">Meu Dia 📅</h2>
+          <p className="text-slate-400 font-bold">Organização visual para uma jornada tranquila.</p>
         </div>
-        <input
-          type="url"
-          value={newImageUrl}
-          onChange={(e) => setNewImageUrl(e.target.value)}
-          placeholder="Link da imagem (opcional)"
-          className="w-full p-5 rounded-2xl border-none inner-depth outline-none bg-slate-100 font-bold"
-        />
-        <button type="submit" className="bg-black text-white py-5 rounded-2xl font-black text-xl hover:bg-slate-900 shadow-xl transition-all clay-button">
-          + Adicionar à Rotina
-        </button>
-      </form>
+        <div className="relative z-10 flex flex-col items-center">
+          <div className="w-24 h-24 rounded-full border-8 border-slate-50 flex items-center justify-center relative">
+             <svg className="absolute inset-0 w-full h-full -rotate-90">
+                <circle cx="48" cy="48" r="40" fill="transparent" stroke="#3b82f6" strokeWidth="8" strokeDasharray={251.2} strokeDashoffset={251.2 - (251.2 * progress / 100)} className="transition-all duration-1000 ease-out" />
+             </svg>
+             <span className="text-xl font-black text-blue-600">{Math.round(progress)}%</span>
+          </div>
+          <span className="text-[10px] font-black text-slate-400 uppercase mt-2 tracking-widest">Concluído</span>
+        </div>
+      </div>
 
-      <div className="space-y-6">
-        {tasks.map((task) => (
-          <div
-            key={task.id}
-            onClick={() => toggleTask(task.id)}
-            className={`group p-6 rounded-[3rem] flex items-center justify-between cursor-pointer transition-all border-2 ${
-              task.completed 
-                ? 'bg-slate-100 border-slate-200 opacity-60 scale-95' 
-                : 'bg-white shadow-xl border-white hover:border-slate-200 clay-button'
-            }`}
-          >
-            <div className="flex items-center gap-6">
-              <div className="relative">
-                {task.imageUrl && !imageErrors[task.id] ? (
-                  <img 
-                    src={task.imageUrl} 
-                    alt={task.text} 
-                    className={`w-24 h-24 rounded-[2rem] object-cover border-4 ${task.completed ? 'border-slate-300 grayscale' : 'border-white shadow-sm'}`} 
-                    onError={() => setImageErrors(prev => ({ ...prev, [task.id]: true }))}
-                  />
-                ) : (
-                  <div className={`w-24 h-24 rounded-[2rem] flex items-center justify-center text-5xl ${task.completed ? 'bg-slate-200' : 'bg-slate-100 text-slate-500 shadow-inner'}`}>
-                    {task.text.toLowerCase().includes('comer') || task.text.toLowerCase().includes('café') || task.text.toLowerCase().includes('almoço') ? '🍱' : 
-                     task.text.toLowerCase().includes('dente') ? '🪥' :
-                     task.text.toLowerCase().includes('estuda') ? '📚' : '📅'}
-                  </div>
-                )}
-                {task.completed && (
-                  <div className="absolute -top-3 -right-3 bg-black text-white w-10 h-10 rounded-full flex items-center justify-center shadow-xl font-black text-sm border-4 border-white">
-                    ✓
-                  </div>
-                )}
-              </div>
-              
-              <div>
-                <span className={`text-2xl font-black block leading-tight ${task.completed ? 'line-through text-slate-400' : 'text-3d'}`}>
-                  {task.text}
-                </span>
-                {task.time && (
-                  <span className={`font-black px-4 py-1.5 rounded-full text-[11px] uppercase tracking-widest mt-2 inline-block ${task.completed ? 'bg-slate-200 text-slate-400' : 'bg-black text-white'}`}>
-                    ⏰ {task.time}
-                  </span>
-                )}
-              </div>
+      {/* Timeline List */}
+      <div className="relative space-y-8 before:absolute before:left-12 before:top-0 before:bottom-0 before:w-1 before:bg-slate-100 before:rounded-full">
+        {tasks.map((task, idx) => (
+          <div key={task.id} className="relative flex items-center gap-10 group">
+            {/* Timeline Marker */}
+            <div className={`z-10 w-24 h-24 rounded-[2rem] flex items-center justify-center text-3xl transition-all duration-500 border-4 ${
+              task.completed ? 'bg-emerald-500 border-emerald-100 scale-90 rotate-12' : 'bg-white border-slate-50 shadow-xl'
+            }`}>
+              {task.completed ? '✨' : task.time?.split(':')[0]}
             </div>
-            
+
+            {/* Task Card */}
             <button 
-              onClick={(e) => deleteTask(task.id, e)}
-              className="text-slate-300 hover:text-black p-4 transition-colors opacity-0 group-hover:opacity-100"
-              title="Remover"
+              onClick={() => toggleTask(task.id)}
+              className={`flex-1 p-8 rounded-[3rem] text-left transition-all duration-500 flex items-center gap-8 ${
+                task.completed 
+                ? 'bg-slate-50 opacity-40 grayscale blur-[0.5px]' 
+                : 'glass-card border-white shadow-xl hover:shadow-2xl hover:scale-[1.02]'
+              }`}
             >
-              <span className="text-3xl font-black">✕</span>
+              <div className="w-24 h-24 rounded-2xl overflow-hidden shadow-inner flex-shrink-0">
+                <img 
+                  src={task.imageUrl} 
+                  alt={task.text} 
+                  loading="lazy"
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1594322436404-5a0526db4d13?auto=format&fit=crop&q=80&w=400';
+                  }}
+                />
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-3 mb-1">
+                  <span className="text-[10px] font-black text-blue-500 uppercase tracking-widest">Rotina</span>
+                  <div className="h-px w-8 bg-slate-200"></div>
+                </div>
+                <h4 className={`text-2xl font-black ${task.completed ? 'line-through text-slate-400' : 'text-slate-800'}`}>
+                  {task.text}
+                </h4>
+                <p className="text-slate-400 font-bold text-sm">Às {task.time}</p>
+              </div>
+              <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${
+                task.completed ? 'bg-emerald-100 text-emerald-600 scale-110' : 'bg-slate-100 text-transparent'
+              }`}>
+                ✓
+              </div>
             </button>
           </div>
         ))}
       </div>
-      
-      {tasks.length === 0 && (
-        <div className="text-center py-20 bg-slate-100 rounded-[4rem] border-4 border-dashed border-slate-200">
-          <span className="text-7xl mb-6 block">✨</span>
-          <p className="text-slate-400 font-black text-xl">Nenhuma tarefa agendada.</p>
-        </div>
-      )}
     </div>
   );
 };

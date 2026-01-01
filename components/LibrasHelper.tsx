@@ -10,16 +10,39 @@ interface Sign {
 }
 
 const BASIC_SIGNS: Sign[] = [
-  { label: 'Oi / Olá', icon: '👋', description: 'Mão balançando lateralmente.', imageUrl: 'https://images.unsplash.com/photo-1549213821-4708d624e1d1?auto=format&fit=crop&q=80&w=400', bgColor: 'bg-blue-50' },
-  { label: 'Obrigado', icon: '🙏', description: 'Mão tocando a testa e saindo para frente.', imageUrl: 'https://images.unsplash.com/photo-1531353826977-0941b4779a1c?auto=format&fit=crop&q=80&w=400', bgColor: 'bg-green-50' },
-  { label: 'Por favor', icon: '✨', description: 'Mão aberta em círculo no peito.', imageUrl: 'https://images.unsplash.com/photo-1499209974431-9dac3adaf471?auto=format&fit=crop&q=80&w=400', bgColor: 'bg-amber-50' },
-  { label: 'Comer', icon: '🍎', description: 'Dedos unidos tocando a boca.', imageUrl: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&q=80&w=400', bgColor: 'bg-orange-50' },
+  { 
+    label: 'Oi / Olá', 
+    icon: '👋', 
+    description: 'Mão balançando lateralmente.', 
+    imageUrl: 'https://images.unsplash.com/photo-1530268729831-4b0b9e170218?auto=format&fit=crop&q=80&w=400', 
+    bgColor: 'bg-blue-50' 
+  },
+  { 
+    label: 'Obrigado', 
+    icon: '🙏', 
+    description: 'Mão tocando a testa e saindo para frente.', 
+    imageUrl: 'https://images.unsplash.com/photo-1532622785990-d2c36a76f5a6?auto=format&fit=crop&q=80&w=400', 
+    bgColor: 'bg-green-50' 
+  },
+  { 
+    label: 'Por favor', 
+    icon: '✨', 
+    description: 'Mão aberta em círculo no peito.', 
+    imageUrl: 'https://images.unsplash.com/photo-1518391846015-55a9cc003b25?auto=format&fit=crop&q=80&w=400', 
+    bgColor: 'bg-amber-50' 
+  },
+  { 
+    label: 'Comer', 
+    icon: '🍎', 
+    description: 'Dedos unidos tocando a boca.', 
+    imageUrl: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&q=80&w=400', 
+    bgColor: 'bg-orange-50' 
+  },
 ];
 
 export const LibrasHelper: React.FC = () => {
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
-  const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
   const recognitionRef = useRef<any>(null);
 
   useEffect(() => {
@@ -39,10 +62,7 @@ export const LibrasHelper: React.FC = () => {
 
       recognition.onstart = () => setIsListening(true);
       recognition.onend = () => setIsListening(false);
-      recognition.onerror = (event: any) => {
-        console.error('Speech recognition error:', event.error);
-        setIsListening(false);
-      };
+      recognition.onerror = () => setIsListening(false);
       
       recognitionRef.current = recognition;
     }
@@ -54,7 +74,7 @@ export const LibrasHelper: React.FC = () => {
 
   const toggleListening = () => {
     if (!recognitionRef.current) {
-      alert("Seu navegador não suporta reconhecimento de voz.");
+      alert("Navegador incompatível.");
       return;
     }
     
@@ -65,7 +85,6 @@ export const LibrasHelper: React.FC = () => {
       try {
         recognitionRef.current.start();
       } catch (e) {
-        console.error('Recognition start error:', e);
         recognitionRef.current.stop();
       }
     }
@@ -73,61 +92,59 @@ export const LibrasHelper: React.FC = () => {
 
   return (
     <div className="p-8 max-w-6xl mx-auto">
-      <div className="text-center mb-12">
-        <h2 className="text-5xl font-black text-3d mb-4 uppercase tracking-tighter">Ouvir com os Olhos 👂✨</h2>
-        <p className="text-slate-600 font-bold text-xl">Transforme voz em texto gigante para facilitar a leitura.</p>
+      <div className="text-center mb-10">
+        <h2 className="text-4xl font-black text-slate-900 mb-2 uppercase tracking-tighter">Voz em Texto 👂</h2>
+        <p className="text-slate-500 font-bold text-lg">Apoio visual em 2D para comunicação imediata.</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-        <div className="clay-card p-10 flex flex-col gap-8 min-h-[500px]">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="bg-white p-8 rounded-[3rem] border-4 border-slate-50 flex flex-col gap-6 min-h-[450px] shadow-xl">
           <div className="flex items-center justify-between">
-            <h3 className="text-2xl font-black text-blue-600 uppercase tracking-tighter">Transcrição ao Vivo</h3>
-            {isListening && <div className="pulse-3d w-4 h-4 bg-blue-600 rounded-full"></div>}
+            <h3 className="text-xl font-bold text-slate-800 uppercase tracking-tighter">Transcrição Viva</h3>
+            {isListening && <div className="w-3 h-3 bg-blue-500 rounded-full animate-pulse"></div>}
           </div>
           
-          <div className="flex-1 inner-depth rounded-[3rem] p-10 flex items-center justify-center text-center overflow-y-auto">
+          <div className="flex-1 bg-slate-50 rounded-[2.5rem] p-8 flex items-center justify-center text-center overflow-y-auto border-2 border-slate-100">
             {transcript ? (
-              <p className="text-5xl font-black text-black leading-tight break-words text-3d">
+              <p className="text-4xl font-bold text-slate-900 leading-tight break-words">
                 {transcript}
               </p>
             ) : (
               <div className="opacity-40">
-                <span className="text-8xl block mb-4">{isListening ? '🎤' : '🤫'}</span>
-                <p className="text-2xl font-black text-slate-500 uppercase">{isListening ? 'Escutando você...' : 'Aperte o botão abaixo'}</p>
+                <span className="text-6xl block mb-4">{isListening ? '🎤' : '🤫'}</span>
+                <p className="text-lg font-bold text-slate-400 uppercase">{isListening ? 'Escutando...' : 'Clique no botão'}</p>
               </div>
             )}
           </div>
 
           <button
             onClick={toggleListening}
-            className={`w-full py-8 rounded-[2.5rem] font-black text-2xl flex items-center justify-center gap-4 transition-all clay-button shadow-xl ${
-              isListening ? 'bg-rose-600 text-white shadow-rose-200 border-none' : 'bg-white text-blue-600'
+            className={`w-full py-5 rounded-[2rem] font-black text-xl flex items-center justify-center gap-4 transition-all shadow-lg ${
+              isListening ? 'bg-rose-600 text-white' : 'bg-slate-900 text-white hover:bg-black'
             }`}
           >
-            <span>{isListening ? '🛑 PARAR AGORA' : '🎤 ATIVAR MICROFONE'}</span>
+            {isListening ? 'PARAR' : 'ATIVAR MICROFONE'}
           </button>
         </div>
 
-        <div className="space-y-6">
-          <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest px-4">Sinais Rápidos (LIBRAS)</h3>
-          <div className="grid grid-cols-1 gap-6 overflow-y-auto max-h-[600px] pr-4 no-scrollbar">
+        <div className="space-y-4">
+          <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-2">Sinais de Apoio (2D)</h3>
+          <div className="grid grid-cols-1 gap-4 overflow-y-auto max-h-[500px] no-scrollbar pr-2">
             {BASIC_SIGNS.map((sign) => (
-              <div key={sign.label} className="clay-card p-6 flex items-center gap-6 group hover:scale-[1.02] bg-white border border-slate-100">
-                <div className={`w-28 h-28 rounded-3xl overflow-hidden shadow-inner ${sign.bgColor} flex-shrink-0 flex items-center justify-center`}>
-                  {imageErrors[sign.label] ? (
-                    <span className="text-5xl">{sign.icon}</span>
-                  ) : (
-                    <img 
-                      src={sign.imageUrl} 
-                      className="w-full h-full object-cover p-1 rounded-3xl" 
-                      alt={sign.label} 
-                      onError={() => setImageErrors(prev => ({...prev, [sign.label]: true}))}
-                    />
-                  )}
+              <div key={sign.label} className="bg-white p-6 rounded-[2rem] flex items-center gap-6 border-4 border-white shadow-sm hover:border-blue-100 transition-all">
+                <div className={`w-20 h-20 rounded-2xl overflow-hidden ${sign.bgColor} flex-shrink-0 flex items-center justify-center border-2 border-white shadow-inner`}>
+                   <img 
+                    src={sign.imageUrl} 
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform" 
+                    alt={sign.label} 
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1594322436404-5a0526db4d13?auto=format&fit=crop&q=80&w=400';
+                    }}
+                   />
                 </div>
                 <div>
-                  <h4 className="text-3xl font-black text-3d mb-1">{sign.label}</h4>
-                  <p className="text-slate-500 font-bold text-lg leading-snug">{sign.description}</p>
+                  <h4 className="text-xl font-bold text-slate-800 mb-1">{sign.label}</h4>
+                  <p className="text-slate-500 font-medium text-sm leading-snug">{sign.description}</p>
                 </div>
               </div>
             ))}

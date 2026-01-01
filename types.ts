@@ -1,6 +1,22 @@
 
 export type Language = 'pt' | 'en' | 'es' | 'fr';
 
+export interface Alarm {
+  id: string;
+  time: string;
+  label: string;
+  enabled: boolean;
+}
+
+export interface Review {
+  id: string;
+  userName: string;
+  rating: number;
+  comment: string;
+  timestamp: number;
+  avatar: string;
+}
+
 export interface CommunicationCard {
   id: string;
   label: string;
@@ -51,4 +67,4 @@ export interface ActivityLog {
   detail: string;
 }
 
-export type AppTab = 'board' | 'routine' | 'calm' | 'stories' | 'signs' | 'study' | 'courses' | 'games' | 'incentives' | 'settings' | 'sos' | 'noise' | 'consultant';
+export type AppTab = 'board' | 'routine' | 'calm' | 'stepbystep' | 'signs' | 'study' | 'courses' | 'games' | 'incentives' | 'settings' | 'sos' | 'noise' | 'consultant' | 'tracker' | 'gallery' | 'about' | 'contact' | 'autism_info' | 'privacy' | 'sitemap' | 'community' | 'clock';

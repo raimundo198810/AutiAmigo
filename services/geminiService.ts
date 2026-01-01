@@ -2,63 +2,106 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { Language } from "../types.ts";
 
-const getAI = () => new GoogleGenAI({ apiKey: process.env.API_KEY });
-
 const getLanguageName = (lang: Language) => {
   const names = { pt: 'Português', en: 'English', es: 'Español', fr: 'Français' };
   return names[lang];
 };
 
-export const generateSocialStory = async (situation: string, lang: Language = 'pt') => {
-  const ai = getAI();
+// Fixed: Following guidelines to use direct apiKey from process.env.API_KEY
+// and creating a new instance for each call as per updated SDK best practices.
+const getAI = () => {
+  return new GoogleGenAI({ apiKey: process.env.API_KEY });
+};
+
+export const decomposeTask = async (task: string, lang: Language = 'pt') => {
   try {
+    const ai = getAI();
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: `Crie uma História Social extremamente visual em ${getLanguageName(lang)} sobre: "${situation}". Use frases curtas (sujeito-verbo-objeto), 100% literal, sem metáforas. Divida em passos numerados com emojis claros que representam ações físicas.`,
+      contents: [{
+        parts: [{
+          text: `Você é um especialista em autismo. Quebre a tarefa "${task}" em 5-10 passos em ${getLanguageName(lang)}. Retorne estritamente JSON.`
+        }]
+      }],
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            taskTitle: { type: Type.STRING },
+            steps: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  text: { type: Type.STRING },
+                  emoji: { type: Type.STRING }
+                }
+              }
+            }
+          },
+          required: ["taskTitle", "steps"]
+        }
+      }
     });
-    return response.text || "Erro.";
+    return JSON.parse(response.text || '{}');
   } catch (error) {
     console.error("Gemini Error:", error);
-    return "Error generation story.";
+    return null;
   }
 };
 
-export const createEducationalMaterial = async (prompt: string, lang: Language = 'pt') => {
-  const ai = getAI();
+export const generateQuiz = async (topic: string, lang: Language = 'pt') => {
   try {
+    const ai = getAI();
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: `Você é um tutor de educação especial para autistas surdos e mudos. Explique em ${getLanguageName(lang)}: "${prompt}". 
-      REGRAS:
-      1. Use frases curtas e diretas.
-      2. Use MUITOS emojis para cada conceito principal.
-      3. Liste passos de 1 a 5.
-      4. Evite palavras complexas ou abstratas.
-      5. Formate como um roteiro visual para fácil tradução em sinais.`,
+      contents: [{
+        parts: [{
+          text: `Gere 3 perguntas de múltipla escolha sobre "${topic}" em ${getLanguageName(lang)} para autistas. 
+          Use linguagem simples. Retorne estritamente JSON com array "questions", cada item com "question", "options" (3 itens), "correctIndex" (0-2) e "emoji".`
+        }]
+      }],
       config: {
-        systemInstruction: `Responda sempre em ${getLanguageName(lang)}. Foco total em clareza literal e apoio visual.`,
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            questions: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  question: { type: Type.STRING },
+                  options: { type: Type.ARRAY, items: { type: Type.STRING } },
+                  correctIndex: { type: Type.INTEGER },
+                  emoji: { type: Type.STRING }
+                }
+              }
+            }
+          }
+        }
       }
     });
-    return response.text || "Material não disponível.";
+    const parsed = JSON.parse(response.text || '{ "questions": [] }');
+    return parsed.questions && parsed.questions.length > 0 ? parsed : null;
   } catch (error) {
-    return "Error generating material.";
+    console.error("Quiz Generation Error:", error);
+    return null;
   }
 };
 
 export const generateCourseContent = async (topic: string, lang: Language = 'pt') => {
-  const ai = getAI();
   try {
+    const ai = getAI();
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: `Gere um curso rápido de 3 lições em ${getLanguageName(lang)} sobre: "${topic}". 
-      Formato JSON: 
-      {
-        "title": "Nome do Curso",
-        "lessons": [
-          {"title": "Lição 1", "content": "Explicação visual curta com emojis", "icon": "emoji"},
-          ...
-        ]
-      }`,
+      contents: [{
+        parts: [{
+          text: `Crie um curso de 3 lições sobre "${topic}" em ${getLanguageName(lang)}. 
+          Foco em autismo: use passos concretos. Retorne estritamente JSON.`
+        }]
+      }],
       config: {
         responseMimeType: "application/json",
         responseSchema: {
@@ -76,41 +119,101 @@ export const generateCourseContent = async (topic: string, lang: Language = 'pt'
                 }
               }
             }
-          }
+          },
+          required: ["title", "lessons"]
         }
       }
     });
-    return JSON.parse(response.text);
+    return JSON.parse(response.text || '{}');
   } catch (error) {
+    console.error("Course Generation Error:", error);
     return null;
   }
 };
 
 export const generateDailyIncentive = async (lang: Language = 'pt') => {
-  const ai = getAI();
   try {
+    const ai = getAI();
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
-      contents: `Gere uma frase de incentivo visual curta em ${getLanguageName(lang)} para uma criança autista. Use apenas palavras de ação e emojis de sucesso.`,
+      model: 'gemini-3-flash-preview',
+      contents: [{ parts: [{ text: `Dê uma frase curta de incentivo para uma pessoa autista em ${getLanguageName(lang)}. Seja encorajador.` }] }],
     });
-    return response.text || "🌟";
+    return response.text || "Você é incrível! 🌟";
   } catch (error) {
-    return "🌟";
+    return "Você é capaz! 🌟";
   }
 };
 
 export const askCaregiverExpert = async (question: string, lang: Language = 'pt') => {
-  const ai = getAI();
   try {
+    const ai = getAI();
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: question,
+      contents: [{ parts: [{ text: question }] }],
       config: {
-        systemInstruction: `Você é um Especialista em autismo e surdez. Responda em ${getLanguageName(lang)}. Forneça conselhos práticos para comunicação bimodal e suporte sensorial.`,
+        systemInstruction: `Você é um especialista em autismo altamente qualificado. Responda em ${getLanguageName(lang)} de forma prática, acolhedora e direta.`,
       }
     });
-    return response.text || "Error.";
+    return response.text || "Não consegui processar a dúvida.";
   } catch (error) {
-    return "Error.";
+    return "Erro de conexão com o especialista.";
+  }
+};
+
+export const generateSocialStory = async (situation: string, lang: Language = 'pt') => {
+  try {
+    const ai = getAI();
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: [{ parts: [{ text: `Crie uma história social curta para a situação: "${situation}" em ${getLanguageName(lang)}. Use linguagem concreta e positiva.` }] }],
+    });
+    return response.text || "História não disponível.";
+  } catch (error) {
+    return "Erro ao gerar história.";
+  }
+};
+
+export const createEducationalMaterial = async (prompt: string, lang: Language = 'pt') => {
+  try {
+    const ai = getAI();
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: [{ parts: [{ text: prompt }] }],
+    });
+    return response.text || "Conteúdo indisponível.";
+  } catch (error) {
+    return "Erro ao gerar material.";
+  }
+};
+
+export const generateFlashcards = async (topic: string, lang: Language = 'pt') => {
+  try {
+    const ai = getAI();
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: [{ parts: [{ text: `Gere 6 flashcards educativos sobre ${topic} em ${getLanguageName(lang)}. Retorne JSON.` }] }],
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            cards: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  front: { type: Type.STRING },
+                  back: { type: Type.STRING },
+                  emoji: { type: Type.STRING }
+                }
+              }
+            }
+          }
+        }
+      }
+    });
+    return JSON.parse(response.text || '{"cards":[]}');
+  } catch (error) {
+    return { cards: [] };
   }
 };

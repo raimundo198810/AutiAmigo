@@ -1,76 +1,85 @@
 
 import React, { useState } from 'react';
-import { askCaregiverExpert } from '../services/geminiService.ts';
 import { Language } from '../types.ts';
 
-// Added lang prop to interface
-interface CaregiverAIProps {
-  lang: Language;
+interface Strategy {
+  question: string;
+  answer: string;
+  category: 'Sensorial' | 'Rotina' | 'Social' | 'Alimentação';
 }
 
-export const CaregiverAI: React.FC<CaregiverAIProps> = ({ lang }) => {
-  const [question, setQuestion] = useState('');
-  const [answer, setAnswer] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+const STRATEGIES: Strategy[] = [
+  {
+    category: 'Sensorial',
+    question: 'O que fazer em caso de sobrecarga sonora?',
+    answer: '1. Leve a pessoa para um local calmo.\n2. Ofereça protetores auriculares ou fones.\n3. Evite falar muito ou dar ordens complexas.\n4. Use luzes baixas se possível.'
+  },
+  {
+    category: 'Sensorial',
+    question: 'Dicas para crises em locais públicos',
+    answer: 'Identifique sinais precoces (agitação, tapar ouvidos). Tenha um "kit de calma" (fidget toys, mordedores). Procure a saída mais próxima ou um canto reservado.'
+  },
+  {
+    category: 'Rotina',
+    question: 'Como facilitar transições entre atividades?',
+    answer: 'Use avisos visuais (cronômetros). Avise 5 minutos antes de acabar. Use a técnica do "Primeiro... Depois...". Ex: "Primeiro guardamos os brinquedos, depois vamos lanchar".'
+  },
+  {
+    category: 'Alimentação',
+    question: 'Lidando com a seletividade alimentar',
+    answer: 'Introduza novos alimentos sem pressão. Foque na textura e cor primeiro. Permita que a pessoa explore o alimento com as mãos antes de provar. Mantenha o ambiente do almoço calmo.'
+  },
+  {
+    category: 'Social',
+    question: 'Preparando para visitas ou festas',
+    answer: 'Use Histórias Sociais para explicar quem estará lá e o que vai acontecer. Defina um "espaço de escape" onde a pessoa possa ficar sozinha se cansar da interação.'
+  }
+];
 
-  // Updated handleAsk to pass lang to askCaregiverExpert
-  const handleAsk = async () => {
-    if (!question.trim()) return;
-    setLoading(true);
-    const result = await askCaregiverExpert(question, lang);
-    setAnswer(result);
-    setLoading(false);
-  };
+export const CaregiverAI: React.FC<{ lang: Language }> = ({ lang }) => {
+  const [filter, setFilter] = useState<string>('Todas');
+  const categories = ['Todas', 'Sensorial', 'Rotina', 'Social', 'Alimentação'];
+
+  const filtered = filter === 'Todas' ? STRATEGIES : STRATEGIES.filter(s => s.category === filter);
 
   return (
     <div className="p-8 max-w-4xl mx-auto">
       <div className="text-center mb-10">
-        <div className="inline-block relative mb-6">
-          <img 
-            src="https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&q=80&w=400" 
-            className="w-48 h-48 rounded-3xl object-cover shadow-2xl"
-            alt="Especialista"
-          />
-          <div className="absolute -bottom-2 -right-2 bg-blue-600 text-white p-3 rounded-2xl shadow-lg">👩‍⚕️</div>
-        </div>
-        <h2 className="text-3xl font-black text-slate-800 mb-2">Especialista de Apoio IA</h2>
-        <p className="text-slate-500 font-medium">Dúvidas sobre comportamento, inclusão e suporte para cuidadores.</p>
+        <h2 className="text-4xl font-black text-slate-900 mb-2 uppercase tracking-tighter">Manual de Apoio 📖</h2>
+        <p className="text-slate-600 font-bold text-lg">Estratégias práticas para o dia a dia.</p>
       </div>
 
-      <div className="bg-blue-50/50 p-8 rounded-[3rem] border-4 border-blue-50 mb-8">
-        <div className="flex flex-col gap-4">
-          <label className="text-xs font-black text-blue-600 ml-2 uppercase tracking-widest">Sua dúvida ou situação:</label>
-          <textarea
-            value={question}
-            onChange={(e) => setQuestion(e.target.value)}
-            placeholder="Ex: Como lidar com seletividade alimentar? / Sugestão de atividade sensorial para casa."
-            className="w-full p-6 rounded-[2rem] border-none shadow-inner focus:ring-4 ring-blue-100 outline-none font-bold text-slate-700 h-32"
-          />
+      <div className="flex flex-wrap justify-center gap-2 mb-10">
+        {categories.map(cat => (
           <button
-            onClick={handleAsk}
-            disabled={loading || !question.trim()}
-            className="bg-blue-600 text-white py-5 rounded-[2rem] font-black text-xl shadow-xl hover:bg-blue-700 transition-all active:scale-95 disabled:opacity-50"
+            key={cat}
+            onClick={() => setFilter(cat)}
+            className={`px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all ${
+              filter === cat ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+            }`}
           >
-            {loading ? 'Consultando especialista...' : 'Pedir Orientação ✨'}
+            {cat}
           </button>
-        </div>
+        ))}
       </div>
 
-      {answer && (
-        <div className="bg-white p-8 rounded-[3rem] shadow-2xl border-2 border-blue-50 animate-fade-in">
-          <div className="flex items-center gap-3 mb-6">
-            <span className="bg-green-100 text-green-600 p-2 rounded-xl text-xs font-black uppercase tracking-widest">Dicas da Especialista IA</span>
+      <div className="space-y-6 animate-fade-in">
+        {filtered.map((strategy, idx) => (
+          <div key={idx} className="bg-white p-8 rounded-[3rem] border-4 border-slate-50 shadow-sm hover:border-indigo-100 transition-all">
+            <div className="flex justify-between items-start mb-4">
+              <span className="bg-indigo-50 text-indigo-600 px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest">
+                {strategy.category}
+              </span>
+            </div>
+            <h3 className="text-2xl font-black text-slate-800 mb-4 leading-tight">{strategy.question}</h3>
+            <div className="bg-slate-50 p-6 rounded-2xl border-2 border-slate-100">
+              <p className="text-lg font-bold text-slate-600 leading-relaxed whitespace-pre-wrap">
+                {strategy.answer}
+              </p>
+            </div>
           </div>
-          <div className="prose prose-blue max-w-none">
-            <p className="text-slate-700 font-bold whitespace-pre-wrap leading-relaxed text-lg">
-              {answer}
-            </p>
-          </div>
-          <div className="mt-8 p-4 bg-slate-50 rounded-2xl text-[10px] text-slate-400 font-bold uppercase text-center">
-            Nota: Esta é uma ferramenta de apoio. Consulte sempre profissionais de saúde e terapeutas.
-          </div>
-        </div>
-      )}
+        ))}
+      </div>
     </div>
   );
 };

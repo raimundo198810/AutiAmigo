@@ -1,7 +1,13 @@
 
-import { UserProfile, ActivityLog, CommunicationCard, Task } from '../types.ts';
+import { UserProfile, ActivityLog, CommunicationCard, Task, Course, Review } from '../types.ts';
 
 const DB_PREFIX = 'ajuda_autista_db_v1_';
+
+export interface GameStats {
+  memoryBestMoves: number | null;
+  simonMaxLevel: number;
+  balloonsMaxScore: number;
+}
 
 export const DatabaseService = {
   // --- GERENCIAMENTO DE PERFIS ---
@@ -30,8 +36,7 @@ export const DatabaseService = {
 
   // --- DADOS DINÂMICOS POR PERFIL ---
   getCollection: <T>(key: string, defaultValue: T): T => {
-    const profileId = DatabaseService.getActiveProfileId();
-    if (!profileId) return defaultValue;
+    const profileId = DatabaseService.getActiveProfileId() || 'default';
     try {
       const data = localStorage.getItem(`${DB_PREFIX}${profileId}_${key}`);
       return data ? JSON.parse(data) : defaultValue;
@@ -39,15 +44,45 @@ export const DatabaseService = {
   },
 
   saveCollection: <T>(key: string, data: T) => {
-    const profileId = DatabaseService.getActiveProfileId();
-    if (!profileId) return;
+    const profileId = DatabaseService.getActiveProfileId() || 'default';
     localStorage.setItem(`${DB_PREFIX}${profileId}_${key}`, JSON.stringify(data));
   },
 
-  // --- LOGS DE ATIVIDADE (DATABASE DE EVENTOS) ---
+  // --- AVALIAÇÕES DO SITE ---
+  getReviews: (): Review[] => {
+    try {
+      const data = localStorage.getItem(`${DB_PREFIX}site_reviews`);
+      const defaultReviews: Review[] = [
+        { id: '1', userName: 'Ana Maria', rating: 5, comment: 'Este app mudou a rotina do meu filho. O quadro de voz é perfeito!', timestamp: Date.now() - 86400000, avatar: '👩' },
+        { id: '2', userName: 'Carlos Silva', rating: 4, comment: 'Muito intuitivo e bonito. Adorei os jogos!', timestamp: Date.now() - 172800000, avatar: '👨' },
+        { id: '3', userName: 'Juliana P.', rating: 5, comment: 'A função de guia visual ajuda muito na autonomia.', timestamp: Date.now() - 259200000, avatar: '🧒' }
+      ];
+      return data ? JSON.parse(data) : defaultReviews;
+    } catch { return []; }
+  },
+
+  saveReview: (review: Review) => {
+    const reviews = DatabaseService.getReviews();
+    const updated = [review, ...reviews];
+    localStorage.setItem(`${DB_PREFIX}site_reviews`, JSON.stringify(updated));
+  },
+
+  // --- RECORDES DE JOGOS ---
+  getGameStats: (): GameStats => {
+    return DatabaseService.getCollection<GameStats>('game_stats', {
+      memoryBestMoves: null,
+      simonMaxLevel: 0,
+      balloonsMaxScore: 0
+    });
+  },
+
+  saveGameStats: (stats: GameStats) => {
+    DatabaseService.saveCollection('game_stats', stats);
+  },
+
+  // --- LOGS DE ATIVIDADE ---
   logActivity: (type: ActivityLog['type'], detail: string) => {
-    const profileId = DatabaseService.getActiveProfileId();
-    if (!profileId) return;
+    const profileId = DatabaseService.getActiveProfileId() || 'default';
     const logs = DatabaseService.getLogs();
     const newLog: ActivityLog = {
       id: Date.now().toString(),
@@ -55,13 +90,12 @@ export const DatabaseService = {
       type,
       detail
     };
-    const updatedLogs = [newLog, ...logs].slice(0, 100); // Mantém últimos 100
+    const updatedLogs = [newLog, ...logs].slice(0, 100);
     localStorage.setItem(`${DB_PREFIX}${profileId}_logs`, JSON.stringify(updatedLogs));
   },
 
   getLogs: (): ActivityLog[] => {
-    const profileId = DatabaseService.getActiveProfileId();
-    if (!profileId) return [];
+    const profileId = DatabaseService.getActiveProfileId() || 'default';
     try {
       const data = localStorage.getItem(`${DB_PREFIX}${profileId}_logs`);
       return data ? JSON.parse(data) : [];
